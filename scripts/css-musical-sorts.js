@@ -1,0 +1,179 @@
+"use strict";
+//http://localhost/~Jackson/css-musical-sorts/
+
+/**
+random notes
+sorts are from https://khan4019.github.io/front-end-Interview-Questions/sort.html
+every line accessed needs to perform a tone
+**/
+
+// function() { // start scope wrap @jkr
+
+// using ES5 to support old browsers - everyone wants to be involed :D  @jkr
+
+function CSSMusicalSorts(divId) {
+	// return;
+	try {
+		if(!divId) throw "no divID given, give CSSMusicalSorts some params";
+		if(!(window.AudioContext || window.webkitAudioContext || window.audioContext))
+			"This browser doesn't support audio context";
+
+		// main construct @jkr
+		this._divId = divId;
+		this._sortIndex = -1;
+		this._sorts = [];
+		this._toneIsPlaying = false;
+
+		// init audio @jkr
+		this._audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
+		this._osc = this._audioCtx.createOscillator();
+		this._gain = this._audioCtx.createGain();
+
+		// config audio @jkr
+		this._gain.gain.value = CSSMusicalSorts.TONE_VOLUME;
+		this._osc.type = CSSMusicalSorts.TONE_TYPE;
+		this._osc.connect(this._gain);
+		this._gain.connect(this._audioCtx.destination);
+
+		var self = this;
+		document.addEventListener(CSSMusicalSorts.STEP_CONTINUE_EVENT, function() { self.stepContinue(); });
+	} catch(e) {
+		alert("This experience isn't going to work on your computer :(");
+		console.error(e);
+	}
+}
+// CSSMusicalSorts.instance;
+CSSMusicalSorts.SAMPLE_ARRAY_LENGTH = 1000;
+CSSMusicalSorts.STEP_DURATION = 10; // ms
+CSSMusicalSorts.TONE_FREQUENCY_MIN = 40; // hz
+CSSMusicalSorts.TONE_FREQUENCY_MAX = 1000; //hz
+CSSMusicalSorts.TONE_TYPE = "triangle";
+CSSMusicalSorts.TONE_VOLUME = 0.1;
+CSSMusicalSorts.STEP_CONTINUE_EVENT = "CSSMusicalSorts.STEP_CONTINUE_EVENT";
+CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
+	var statusObj = instance.getStatusObj();
+	var arr = statusObj.arr;
+	var len = arr.length;
+	if(statusObj.i == undefined) {
+		statusObj.i = len-1;
+		statusObj.j = 1;
+	}
+
+	var i = statusObj.i;
+	var j = statusObj.j;
+
+    for (/*var i = len-1*/; i>=0; i--){
+    	statusObj.i = i-1;
+    	instance.toneCallback(i);
+		for(/*var j = 1*/; j<=i; j++){
+			statusObj.j = j+1;
+			// return instance.toneCallback(j);
+			if(arr[j-1]>arr[j]){
+			   var temp = arr[j-1];
+			   arr[j-1] = arr[j];
+			   arr[j] = temp;
+			   return instance.toneCallback(j);
+			}
+			return instance.stepComplete(arr);
+		}
+    }
+    
+    return null;
+}
+
+/**
+ * this function is called for every time a sort algo completes a loop
+ * @jkr
+ */
+CSSMusicalSorts.prototype.stepComplete = function() {
+
+}
+/**
+ * this functions creates a tone base on current array size vs input value.
+ * input value and tone pitch are related
+ * @jkr
+ */
+CSSMusicalSorts.prototype.toneCallback = function(value) {
+	var percent = value / this._statusObj.arr.length;
+	var toneRange = (CSSMusicalSorts.TONE_FREQUENCY_MAX - CSSMusicalSorts.TONE_FREQUENCY_MIN);
+	var tone = toneRange * percent + CSSMusicalSorts.TONE_FREQUENCY_MIN;
+	console.log("Playing tone at " + tone + " hz");
+	this._osc.frequency.value = tone;
+	if(this._toneIsPlaying == false) {
+		this._toneIsPlaying = true;
+		this._osc.start();
+	}
+	var self = this;
+}
+CSSMusicalSorts.prototype.addSort = function(recursiveAlgo) {
+	this._sorts.push(recursiveAlgo);
+}
+CSSMusicalSorts.prototype.start = function() {
+	this.nextSort();
+}
+CSSMusicalSorts.prototype.nextSort = function() {
+	this._statusObj = {};
+	this._statusObj.arr = this.generateSampleData();
+	console.log("next sort - starting loop");
+
+	if(++this._sortIndex >= this._sorts.length) {
+		this.stopOscillator();
+		console.log("experience over");
+		return;
+	}
+
+	this.step();
+}
+CSSMusicalSorts.prototype.stopOscillator = function() {
+	if(this._toneIsPlaying == true) {
+		this._osc.stop();
+	}
+}
+CSSMusicalSorts.prototype.step = function() {
+	var algo = this._sorts[this._sortIndex];
+	console.log("i " + this._statusObj.i);
+	if(algo(this) !== null) {
+		this.stepContinue();
+		//document.dispatchEvent(new Event(CSSMusicalSorts.STEP_CONTINUE_EVENT));
+		return;
+	}
+	
+	this.loopComplete();
+}
+CSSMusicalSorts.prototype.stepContinue = function() {
+	var self = this;
+	setTimeout(function() {
+		// self.stopOscillator();
+		self.step();
+	}, CSSMusicalSorts.STEP_DURATION);
+}
+CSSMusicalSorts.prototype.getStatusObj = function() {
+	return this._statusObj;
+}
+CSSMusicalSorts.prototype.loopComplete = function() {
+	// marke each value green and play tone @jkr
+
+	// for() {
+	// 	this.markDiveComplete();
+	// 	this.playTone();
+	// }
+
+	this.nextSort();
+}
+CSSMusicalSorts.prototype.generateSampleData = function() {
+	var arr = [];
+
+	while(arr.length < CSSMusicalSorts.SAMPLE_ARRAY_LENGTH) arr.push(arr.length+1);
+
+	// https://stackoverflow.com/a/6274381/332578
+    var j, x, i;
+    for (i = arr.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = arr[i];
+        arr[i] = arr[j];
+        arr[j] = x;
+    }
+    return arr;
+}
+
+// }(); // end scope wrap @jkr
