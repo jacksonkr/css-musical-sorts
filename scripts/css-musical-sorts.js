@@ -36,7 +36,6 @@ function CSSMusicalSorts(divId) {
 		this._gain.connect(this._audioCtx.destination);
 
 		var self = this;
-		document.addEventListener(CSSMusicalSorts.STEP_CONTINUE_EVENT, function() { self.stepContinue(); });
 	} catch(e) {
 		alert("This experience isn't going to work on your computer :(");
 		console.error(e);
@@ -49,7 +48,6 @@ CSSMusicalSorts.TONE_FREQUENCY_MIN = 40; // hz
 CSSMusicalSorts.TONE_FREQUENCY_MAX = 1000; //hz
 CSSMusicalSorts.TONE_TYPE = "triangle";
 CSSMusicalSorts.TONE_VOLUME = 0.1;
-CSSMusicalSorts.STEP_CONTINUE_EVENT = "CSSMusicalSorts.STEP_CONTINUE_EVENT";
 CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
 	var statusObj = instance.getStatusObj();
 	var arr = statusObj.arr;
@@ -64,15 +62,17 @@ CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
 
     for (/*var i = len-1*/; i>=0; i--){
     	statusObj.i = i-1;
-    	instance.toneCallback(i);
+    	return instance.toneCallback(i);
 		for(/*var j = 1*/; j<=i; j++){
 			statusObj.j = j+1;
 			// return instance.toneCallback(j);
 			if(arr[j-1]>arr[j]){
-			   var temp = arr[j-1];
-			   arr[j-1] = arr[j];
-			   arr[j] = temp;
-			   return instance.toneCallback(j);
+				var temp = arr[j-1];
+				arr[j-1] = arr[j];
+				arr[j] = temp;
+				instance.indexTouched(j-1);
+				instance.indexTouched(j);
+			   // return instance.toneCallback(j);
 			}
 			return instance.stepComplete(arr);
 		}
@@ -87,6 +87,10 @@ CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
  */
 CSSMusicalSorts.prototype.stepComplete = function() {
 
+}
+CSSMusicalSorts.prototype.indexTouched = indexTouched(id) {
+	var ele = document.GetElementById("cssms-cell-" + id);
+	ele.class.add("touched");
 }
 /**
  * this functions creates a tone base on current array size vs input value.
@@ -134,7 +138,6 @@ CSSMusicalSorts.prototype.step = function() {
 	console.log("i " + this._statusObj.i);
 	if(algo(this) !== null) {
 		this.stepContinue();
-		//document.dispatchEvent(new Event(CSSMusicalSorts.STEP_CONTINUE_EVENT));
 		return;
 	}
 	
