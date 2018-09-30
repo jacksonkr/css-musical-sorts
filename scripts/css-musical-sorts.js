@@ -36,14 +36,17 @@ function CSSMusicalSorts(divId) {
 		this._gain.connect(this._audioCtx.destination);
 
 		var self = this;
+
+		this.updateVisuals();
 	} catch(e) {
 		alert("This experience isn't going to work on your computer :(");
 		console.error(e);
 	}
 }
 // CSSMusicalSorts.instance;
-CSSMusicalSorts.SAMPLE_ARRAY_LENGTH = 1000;
-CSSMusicalSorts.STEP_DURATION = 10; // ms
+CSSMusicalSorts.SAMPLE_ARRAY_LENGTH = 125;
+CSSMusicalSorts.TOUCH_END_DELAY = 100 //ms
+CSSMusicalSorts.STEP_DURATION = 0; // ms
 CSSMusicalSorts.TONE_FREQUENCY_MIN = 40; // hz
 CSSMusicalSorts.TONE_FREQUENCY_MAX = 1000; //hz
 CSSMusicalSorts.TONE_TYPE = "triangle";
@@ -56,26 +59,28 @@ CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
 		statusObj.i = len-1;
 		statusObj.j = 1;
 	}
-
 	var i = statusObj.i;
 	var j = statusObj.j;
 
     for (/*var i = len-1*/; i>=0; i--){
-    	statusObj.i = i-1;
-    	return instance.toneCallback(i);
+    	if(statusObj.j >= i) statusObj.i = i-1;
+    	// return instance.toneCallback(i);
 		for(/*var j = 1*/; j<=i; j++){
 			statusObj.j = j+1;
+			instance.indexTouched(j);
 			// return instance.toneCallback(j);
 			if(arr[j-1]>arr[j]){
 				var temp = arr[j-1];
 				arr[j-1] = arr[j];
 				arr[j] = temp;
-				instance.indexTouched(j-1);
-				instance.indexTouched(j);
+				instance.valueSwapped(j-1, j);
+				console.log(arr);
 			   // return instance.toneCallback(j);
 			}
-			return instance.stepComplete(arr);
+			return instance.stepComplete();
 		}
+		statusObj.j = 1;
+		return instance.stepComplete();
     }
     
     return null;
@@ -86,11 +91,59 @@ CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
  * @jkr
  */
 CSSMusicalSorts.prototype.stepComplete = function() {
-
+	this.updateVisuals();
 }
-CSSMusicalSorts.prototype.indexTouched = indexTouched(id) {
-	var ele = document.GetElementById("cssms-cell-" + id);
-	ele.class.add("touched");
+/**
+ * updates display based on current array info
+ **/
+CSSMusicalSorts.prototype.updateVisuals = function() {
+	var rootDiv = document.getElementById(this._divId);
+	var values = document.getElementsByClassName("cssms-value");
+
+	if(!this._statusObj) {
+		// clear visuals
+		while(values.length) {
+			var o = values[0];
+			rootDiv.removeChild(o);
+		}
+		return;
+	}
+
+	var arr = this._statusObj.arr;
+
+	if(values.length <= 0) {
+		// no values yet, set them up
+		for(var i in arr) {
+			var o = arr[i];
+			var ele = document.createElement("div");
+			ele.id = "cssms-value-" + o;
+			ele.classList.add("cssms-value");
+			var perc = o / arr.length * 100;
+			ele.style.height = perc + "%";
+			// ele.style.top = 100 - perc + "px";
+			rootDiv.appendChild(ele);
+		}
+	}
+}
+CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
+	// this.indexTouched(fromId);
+	// this.indexTouched(toId);
+
+	var fromEle = document.getElementById("cssms-value-" + fromId);
+	var toEle = document.getElementById("cssms-value-" + toId);
+
+	var toCopy = toEle.cloneNode(true);
+    fromEle.parentNode.insertBefore(toCopy, fromEle);
+    toEle.parentNode.insertBefore(fromEle, toEle);
+    toEle.parentNode.replaceChild(toEle, toCopy);
+}
+CSSMusicalSorts.prototype.indexTouched = function(id) {
+	// console.log("touching " + id);
+	var ele = document.getElementById("cssms-value-" + id);
+	ele.classList.add("touched");
+	setTimeout(function() {
+		ele.classList.remove("touched");
+	}, CSSMusicalSorts.TOUCH_END_DELAY);
 }
 /**
  * this functions creates a tone base on current array size vs input value.
@@ -101,7 +154,7 @@ CSSMusicalSorts.prototype.toneCallback = function(value) {
 	var percent = value / this._statusObj.arr.length;
 	var toneRange = (CSSMusicalSorts.TONE_FREQUENCY_MAX - CSSMusicalSorts.TONE_FREQUENCY_MIN);
 	var tone = toneRange * percent + CSSMusicalSorts.TONE_FREQUENCY_MIN;
-	console.log("Playing tone at " + tone + " hz");
+	// console.log("Playing tone at " + tone + " hz");
 	this._osc.frequency.value = tone;
 	if(this._toneIsPlaying == false) {
 		this._toneIsPlaying = true;
@@ -118,13 +171,16 @@ CSSMusicalSorts.prototype.start = function() {
 CSSMusicalSorts.prototype.nextSort = function() {
 	this._statusObj = {};
 	this._statusObj.arr = this.generateSampleData();
-	console.log("next sort - starting loop");
+	console.log("next sort - starting loop", this._statusObj.arr);
 
 	if(++this._sortIndex >= this._sorts.length) {
+		// there are no more algos to run
 		this.stopOscillator();
-		console.log("experience over");
+		console.log("experience over", this._statusObj.arr);
 		return;
 	}
+
+	this.updateVisuals();
 
 	this.step();
 }
@@ -135,7 +191,7 @@ CSSMusicalSorts.prototype.stopOscillator = function() {
 }
 CSSMusicalSorts.prototype.step = function() {
 	var algo = this._sorts[this._sortIndex];
-	console.log("i " + this._statusObj.i);
+	// console.log("i " + this._statusObj.i);
 	if(algo(this) !== null) {
 		this.stepContinue();
 		return;
@@ -166,7 +222,7 @@ CSSMusicalSorts.prototype.loopComplete = function() {
 CSSMusicalSorts.prototype.generateSampleData = function() {
 	var arr = [];
 
-	while(arr.length < CSSMusicalSorts.SAMPLE_ARRAY_LENGTH) arr.push(arr.length+1);
+	while(arr.length < CSSMusicalSorts.SAMPLE_ARRAY_LENGTH) arr.push(arr.length);
 
 	// https://stackoverflow.com/a/6274381/332578
     var j, x, i;

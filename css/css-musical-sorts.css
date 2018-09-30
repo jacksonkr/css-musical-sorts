@@ -1,0 +1,26 @@
+html, body {
+	height:100%;
+	margin:0;
+}
+
+#css-musical-sorts {
+	display:flex;
+	position: relative;
+	max-width:100%;
+	height:65%; /* not sure why 100 won't work */
+	padding:10% 4px;
+	background: black;
+}
+
+.cssms-value {
+	position: relative;
+	flex:auto;
+	flex-direction: column;
+	align-self:flex-end;
+	background: white;
+	height:100%;
+	margin:0 1px;
+}
+.cssms-value.touched {
+	background: red;
+}
