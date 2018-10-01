@@ -74,6 +74,7 @@ CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
 	if(i >= 0) {
 		if(j <= i) {
 			instance.indexTouched(j);
+			instance.toneCallback(statusObj.j);
 			if(arr[j-1] > arr[j]) {
 				var temp = arr[j-1];
 				arr[j-1] = arr[j];
@@ -181,6 +182,10 @@ CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
  //    toEle.parentNode.insertBefore(fromEle, toEle);
  //    toEle.parentNode.replaceChild(toEle, toCopy);
 }
+CSSMusicalSorts.prototype.defaultSorts = function() {
+	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT);
+	this.addSort(CSSMusicalSorts.ALGO_BUBBLE_SORT);
+}
 CSSMusicalSorts.prototype.indexTouched = function(id) {
 	// console.log("touching " + id);
 	var ele = document.getElementById("cssms-value-" + id);
@@ -221,10 +226,12 @@ CSSMusicalSorts.prototype.nextSort = function() {
 	if(++this._sortIndex >= this._sorts.length) {
 		// there are no more algos to run
 		// this.stopOscillator();
-		console.log("experience over");
+		// console.log("experience over");
 		// return;
+		
 		//start over
 		this._sortIndex = 0;
+		if(true) return;
 	}
 
 	console.log("nextSort", this._statusObj.arr);
