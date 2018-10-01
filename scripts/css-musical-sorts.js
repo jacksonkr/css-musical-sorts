@@ -44,12 +44,17 @@ function CSSMusicalSorts(divId) {
 	}
 }
 // CSSMusicalSorts.instance;
-CSSMusicalSorts.SAMPLE_ARRAY_LENGTH = 10;
+CSSMusicalSorts.SAMPLE_ARRAY_LENGTH = 20;
 CSSMusicalSorts.TOUCH_END_DELAY = 100; //ms
-CSSMusicalSorts.COMPLETION_STEP_DURATION = 50; //ms
+/*
+ * This is for when the sorting is done and the 
+ */
+CSSMusicalSorts.COMPLETION_STEP_DURATION = 30;//CSSMusicalSorts.SAMPLE_ARRAY_LENGTH / 5; //ms
+CSSMusicalSorts.COMPLETION_LAST_STEP_DURATION = 100; //ms
+CSSMusicalSorts.DURATION_TIL_NEXT_SORT = 3000; //ms
 CSSMusicalSorts.STEP_DURATION = 10; // ms
-CSSMusicalSorts.TONE_FREQUENCY_MIN = 40; // hz
-CSSMusicalSorts.TONE_FREQUENCY_MAX = 1000; //hz
+CSSMusicalSorts.TONE_FREQUENCY_MIN = 80; // hz
+CSSMusicalSorts.TONE_FREQUENCY_MAX = 1300; //hz
 CSSMusicalSorts.TONE_TYPE = "triangle";
 CSSMusicalSorts.TONE_VOLUME = 0.1;
 CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
@@ -84,6 +89,41 @@ CSSMusicalSorts.ALGO_BUBBLE_SORT = function(instance) {
     
     return null;
 }
+CSSMusicalSorts.ALGO_SELECTION_SORT = function(instance) {
+	var statusObj = instance.getStatusObj();
+	if(statusObj.i == undefined) {
+		statusObj.i = 0;
+		statusObj.j = 1;
+	}
+
+	var temp, minIdx;
+	var arr = statusObj.arr;
+
+	instance.toneCallback(statusObj.i);
+
+	if(statusObj.i < arr.length) { // loop
+		minIdx = statusObj.i;
+		if(statusObj.j < arr.length) { // loop
+			instance.indexTouched(statusObj.j);
+			instance.toneCallback(statusObj.j);
+			if(arr[statusObj.j] < arr[minIdx]) {
+				minIdx = statusObj.j;
+			}
+		}
+		temp = arr[statusObj.i];
+		instance.valueSwapped(statusObj.i, minIdx);
+		arr[statusObj.i] = arr[minIdx];
+		arr[minIdx] = temp;
+
+		if(++statusObj.j >= arr.length) {
+			statusObj.j = ++statusObj.i + 1;
+		}
+
+		return instance.stepComplete();
+	}
+
+	return null;
+}
 
 /**
  * this function is called for every time a sort algo completes a loop
@@ -99,7 +139,7 @@ CSSMusicalSorts.prototype.updateVisuals = function() {
 	var rootDiv = document.getElementById(this._divId);
 	var values = document.getElementsByClassName("cssms-value");
 
-	if(!this._statusObj) {
+	if(!this._statusObj || !this._statusObj.arr) {
 		// clear visuals
 		while(values.length) {
 			var o = values[0];
@@ -177,13 +217,16 @@ CSSMusicalSorts.prototype.start = function() {
 }
 CSSMusicalSorts.prototype.nextSort = function() {
 	this._statusObj = {};
+	this.updateVisuals();
 	this._statusObj.arr = this.generateSampleData();
 
 	if(++this._sortIndex >= this._sorts.length) {
 		// there are no more algos to run
-		this.stopOscillator();
+		// this.stopOscillator();
 		console.log("experience over");
-		return;
+		// return;
+		//start over
+		this._sortIndex = 0;
 	}
 
 	console.log("nextSort", this._statusObj.arr);
@@ -224,6 +267,9 @@ CSSMusicalSorts.prototype.loopComplete = function() {
 	this.updateVisuals();
 	console.log("loopComplete", this._statusObj.arr);
 
+	this.doCompletionAnimation();
+}
+CSSMusicalSorts.prototype.doCompletionAnimation = function() {
 	var divs = document.getElementsByClassName("cssms-value");
 
 	for(var i in divs) {
@@ -245,10 +291,14 @@ CSSMusicalSorts.prototype.loopComplete = function() {
 			self.markDivComplete(obj.o);
 			var val = self.getArrValueByDiv(obj.o);
 			self.toneCallback(val);
+			if(obj.i == self._statusObj.arr.length-1) {
+				// last item in array
+				setTimeout(function() {
+					self.nextSort();
+				}, CSSMusicalSorts.DURATION_TIL_NEXT_SORT);
+			}
 		}, t, store);
 	}
-
-	// this.nextSort();
 }
 CSSMusicalSorts.prototype.runFuncWithDelay = function(f, delay, obj) {
 	setTimeout(function() {
