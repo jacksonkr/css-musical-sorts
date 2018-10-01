@@ -22,7 +22,7 @@ function CSSMusicalSorts(divId) {
 		this._divId = divId;
 		this._sortIndex = -1;
 		this._sorts = [];
-		this._toneIsPlaying = false;
+		this._isOscillatorOn = false;
 
 		// init audio @jkr
 		this._audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
@@ -32,8 +32,9 @@ function CSSMusicalSorts(divId) {
 		// config audio @jkr
 		this._gain.gain.value = CSSMusicalSorts.TONE_VOLUME;
 		this._osc.type = CSSMusicalSorts.TONE_TYPE;
-		this._osc.connect(this._gain);
 		this._gain.connect(this._audioCtx.destination);
+		this.startOscillator();
+		this._osc.start();
 
 		var self = this;
 
@@ -200,10 +201,7 @@ CSSMusicalSorts.prototype.toneCallback = function(value) {
 	var tone = toneRange * percent + CSSMusicalSorts.TONE_FREQUENCY_MIN;
 	// console.log("Playing tone at " + tone + " hz");
 	this._osc.frequency.value = tone;
-	if(this._toneIsPlaying == false) {
-		this._toneIsPlaying = true;
-		this._osc.start();
-	}
+	this.startOscillator();
 	var self = this;
 }
 CSSMusicalSorts.prototype.addSort = function(recursiveAlgo) {
@@ -235,9 +233,16 @@ CSSMusicalSorts.prototype.nextSort = function() {
 
 	this.step();
 }
+CSSMusicalSorts.prototype.startOscillator = function() {
+	if(this._isOscillatorOn == false) {
+		this._isOscillatorOn = true;
+		this._osc.connect(this._gain);
+	}
+}
 CSSMusicalSorts.prototype.stopOscillator = function() {
-	if(this._toneIsPlaying == true) {
-		this._osc.stop();
+	if(this._isOscillatorOn == true) {
+		this._isOscillatorOn = false;
+		this._osc.disconnect(this._gain);
 	}
 }
 CSSMusicalSorts.prototype.step = function() {
