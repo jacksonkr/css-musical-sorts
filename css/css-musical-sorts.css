@@ -22,5 +22,8 @@ html, body {
 	margin:0 1px;
 }
 .cssms-value.touched {
-	background: red;
+	background: red !important;
+}
+.cssms-value.complete {
+	background: green;
 }
