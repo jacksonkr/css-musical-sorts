@@ -45,8 +45,10 @@ function CSSMusicalSorts(divId) {
 	}
 }
 // CSSMusicalSorts.instance;
-CSSMusicalSorts.SAMPLE_ARRAY_LENGTH = 30;
+CSSMusicalSorts.SAMPLE_ARRAY_LENGTH = 50;
 CSSMusicalSorts.TOUCH_END_DELAY = 100; //ms
+/* only during the completed end of the loop */
+CSSMusicalSorts.COMPLETION_TOUCH_END_DELAY = 30; //ms
 /*
  * This is for when the sorting is done and the 
  */
@@ -132,6 +134,53 @@ CSSMusicalSorts.ALGO_SELECTION_SORT = {
 		return null;
 	}
 }
+CSSMusicalSorts.ALGO_INSERTION_SORT = {
+	name: "Insertion Sort",
+	f: function(instance) {
+		var statusObj = instance.getStatusObj();
+		if(statusObj.i == undefined) {
+			statusObj.i = 1;
+			statusObj.temp = statusObj.arr[statusObj.i];
+			statusObj.j = statusObj.i;
+		}
+
+		if(statusObj.i < statusObj.arr.length) { // for
+			if(statusObj.j > 0
+			&& statusObj.arr[statusObj.j-1] > statusObj.temp) {
+				instance.valueSwapped(statusObj.j, statusObj.j-1);
+				instance.toneCallback(statusObj.j);
+				instance.indexTouched(statusObj.j);
+				statusObj.arr[statusObj.j] = statusObj.arr[statusObj.j-1];
+				--statusObj.j;
+				return instance.stepComplete();
+			}
+
+			statusObj.arr[statusObj.j] = statusObj.temp;
+			++statusObj.i;
+			statusObj.temp = statusObj.arr[statusObj.i];
+			statusObj.j = statusObj.i;
+
+			return instance.stepComplete();
+		}
+
+		return null;
+
+
+		  // var i, len = arr.length, el, j;
+
+		  // for(i = 1; i<len; i++){
+		  //   el = arr[i];
+		  //   j = i;
+
+		  //   while(j>0 && arr[j-1]>toInsert){
+		  //     arr[j] = arr[j-1];
+		  //     j--;
+		  //  }
+
+		  //  arr[j] = el;
+		  // }
+	}
+}
 
 /**
  * this function is called for every time a sort algo completes a loop
@@ -200,17 +249,28 @@ CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
  //    toEle.parentNode.replaceChild(toEle, toCopy);
 }
 CSSMusicalSorts.prototype.defaultSorts = function() {
-	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT);
-	this.addSort(CSSMusicalSorts.ALGO_BUBBLE_SORT);
+	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 0.5);
+	this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 300, 0.5);
+	// this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 500, 1);
+	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 400, 1.2);
+	// this.addSort(CSSMusicalSorts.ALGO_HEAP_SORT, 400, 1);
+	// this.addSort(CSSMusicalSorts.ALGO_RADIX_LSD_SORT, 300, 2);
+	// this.addSort(CSSMusicalSorts.ALGO_RADIX_MSD_SORT, 300, 2);
+	// this.addSort(CSSMusicalSorts.ALGO_SHELL_SORT, 300, 1);
+	// this.addSort(CSSMusicalSorts.ALGO_BUBBLE_SORT, 150, 0.6);
+	// this.addSort(CSSMusicalSorts.ALGO_COCKTAIL_SHAKER_SORT, 165, 0.75);
+	// this.addSort(CSSMusicalSorts.ALGO_GNOME_SORT, 150, 0.75);
+	// this.addSort(CSSMusicalSorts.ALGO_BITONIC_SORT, 300, 0.5);
+	// this.addSort(CSSMusicalSorts.ALGO_BOGO_SORT, 150, 1);
 }
-CSSMusicalSorts.prototype.indexTouched = function(id) {
-	// console.log("touching " + id);
+CSSMusicalSorts.prototype.indexTouched = function(id, delay=CSSMusicalSorts.TOUCH_END_DELAY) {
+	console.log("touching", id, delay);
 	var ele = document.getElementById("cssms-value-" + id);
 	ele.classList.remove("touched");
 	ele.classList.add("touched");
 	setTimeout(function() {
 		ele.classList.remove("touched");
-	}, CSSMusicalSorts.TOUCH_END_DELAY);
+	}, delay);
 }
 /**
  * this functions creates a tone base on current array size vs input value.
@@ -317,7 +377,7 @@ CSSMusicalSorts.prototype.doCompletionAnimation = function() {
 		var store = {'o':o, 'i':+i};
 		t = i * CSSMusicalSorts.COMPLETION_STEP_DURATION;
 		this.runFuncWithDelay(function(obj) {
-			self.indexTouched(obj.i);
+			self.indexTouched(obj.i, CSSMusicalSorts.COMPLETION_TOUCH_END_DELAY);
 			self.markDivComplete(obj.o);
 			var val = self.getArrValueByDiv(obj.o);
 			self.toneCallback(val);
