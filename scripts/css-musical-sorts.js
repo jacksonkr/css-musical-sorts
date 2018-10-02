@@ -48,7 +48,7 @@ function CSSMusicalSorts(divId) {
 	}
 }
 // CSSMusicalSorts.instance;
-CSSMusicalSorts.DEFAULT_SAMPLE_ARRAY_LENGTH = 165;
+// CSSMusicalSorts.DEFAULT_SAMPLE_ARRAY_LENGTH = 165;
 CSSMusicalSorts.TOUCH_END_DELAY = 10; //ms
 /* only during the completed end of the loop */
 CSSMusicalSorts.COMPLETION_TOUCH_END_DELAY = 30; //ms
@@ -270,19 +270,19 @@ CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
  //    toEle.parentNode.replaceChild(toEle, toCopy);
 }
 CSSMusicalSorts.prototype.defaultSorts = function() {
-	// this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 0.5);
-	this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 300, 0.5);
-	// this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 500, 1);
-	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 400, 1.2);
-	// this.addSort(CSSMusicalSorts.ALGO_HEAP_SORT, 400, 1);
-	// this.addSort(CSSMusicalSorts.ALGO_RADIX_LSD_SORT, 300, 2);
-	// this.addSort(CSSMusicalSorts.ALGO_RADIX_MSD_SORT, 300, 2);
-	// this.addSort(CSSMusicalSorts.ALGO_SHELL_SORT, 300, 1);
-	// this.addSort(CSSMusicalSorts.ALGO_BUBBLE_SORT, 150, 0.6);
-	// this.addSort(CSSMusicalSorts.ALGO_COCKTAIL_SHAKER_SORT, 165, 0.75);
-	// this.addSort(CSSMusicalSorts.ALGO_GNOME_SORT, 150, 0.75);
-	// this.addSort(CSSMusicalSorts.ALGO_BITONIC_SORT, 300, 0.5);
-	// this.addSort(CSSMusicalSorts.ALGO_BOGO_SORT, 150, 1);
+	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 7);
+	this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 150, 2);
+	// this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 500, 14);
+	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 400, 17);
+	// this.addSort(CSSMusicalSorts.ALGO_HEAP_SORT, 400, 14);
+	// this.addSort(CSSMusicalSorts.ALGO_RADIX_LSD_SORT, 300, 28);
+	// this.addSort(CSSMusicalSorts.ALGO_RADIX_MSD_SORT, 300, 28);
+	// this.addSort(CSSMusicalSorts.ALGO_SHELL_SORT, 300, 14);
+	// this.addSort(CSSMusicalSorts.ALGO_BUBBLE_SORT, 150, 8);
+	// this.addSort(CSSMusicalSorts.ALGO_COCKTAIL_SHAKER_SORT, 165, 10);
+	// this.addSort(CSSMusicalSorts.ALGO_GNOME_SORT, 150, 10);
+	// this.addSort(CSSMusicalSorts.ALGO_BITONIC_SORT, 300, 7);
+	// this.addSort(CSSMusicalSorts.ALGO_BOGO_SORT, 150, 14);
 }
 CSSMusicalSorts.prototype.indexTouched = function(id, delay=CSSMusicalSorts.TOUCH_END_DELAY) {
 	// console.log("touching", id, delay);
@@ -307,11 +307,11 @@ CSSMusicalSorts.prototype.toneCallback = function(value) {
 	this.startOscillator();
 	var self = this;
 }
-CSSMusicalSorts.prototype.addSort = function(recursiveAlgo, size, speed) {
+CSSMusicalSorts.prototype.addSort = function(recursiveAlgo, len, breakCount) {
 	this._sorts.push({
 		algo: recursiveAlgo,
-		size: size,
-		speed: speed
+		len: len,
+		breakCount: breakCount
 	});
 }
 /**
@@ -323,7 +323,6 @@ CSSMusicalSorts.prototype.start = function() {
 CSSMusicalSorts.prototype.nextSort = function() {
 	this._statusObj = {};
 	this.updateVisuals();
-	this._statusObj.arr = this.generateSampleData();
 
 	if(++this._sortIndex >= this._sorts.length) {
 		// there are no more algos to run
@@ -333,8 +332,14 @@ CSSMusicalSorts.prototype.nextSort = function() {
 		
 		//start over
 		this._sortIndex = 0;
-		if(true) return;
+		// if(true) return;
 	}
+
+
+	var sort = this._sorts[this._sortIndex];
+	var len = sort.len;
+	this._stepCountBreak = sort.breakCount;
+	this._statusObj.arr = this.generateSampleData(len);
 
 	console.log("nextSort", this._statusObj.arr);
 
@@ -436,7 +441,7 @@ CSSMusicalSorts.prototype.getArrValueByDiv = function(div) {
 	var val = this._statusObj.arr[id];
 	return val;
 }
-CSSMusicalSorts.prototype.generateSampleData = function(len=CSSMusicalSorts.DEFAULT_SAMPLE_ARRAY_LENGTH) {
+CSSMusicalSorts.prototype.generateSampleData = function(len) {
 	var arr = [];
 
 	while(arr.length < len) arr.push(arr.length+1);
