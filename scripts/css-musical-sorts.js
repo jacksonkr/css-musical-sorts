@@ -20,6 +20,7 @@ function CSSMusicalSorts(divId) {
 
 		// main construct @jkr
 		this._divId = divId;
+		this._paused = false;
 		this._stepCount = 0;
 		this._stepCountBreak = CSSMusicalSorts.DEFAULT_STEP_COUNT_BREAK;
 		this._step_duration = 0;//CSSMusicalSorts.DEFAULT_STEP_DURATION;
@@ -42,6 +43,18 @@ function CSSMusicalSorts(divId) {
 		var self = this;
 
 		this.updateVisuals();
+
+		// constructor
+		var root = document.getElementById(this._divId);
+		root.addEventListener("click", function() {
+			self._paused = !self._paused;
+			self.stopOscillator();
+			self.updateTitleArea();
+
+			if(!self._paused) {
+				self.stepContinue();
+			}
+		})
 	} catch(e) {
 		alert("This experience isn't going to work on your computer :(");
 		console.error(e);
@@ -210,16 +223,19 @@ CSSMusicalSorts.ALGO_MERGE_SORT = {
 CSSMusicalSorts.prototype.stepComplete = function() {
 	this.updateVisuals();
 }
-CSSMusicalSorts.prototype.updateTitle = function() {
+CSSMusicalSorts.prototype.updateTitleArea = function() {
+	var root = document.getElementById(this._divId);
+
 	var div = document.getElementById("cssms-sort-name");
 	if(!div) {
 		div = document.createElement("div");
 		div.id = "cssms-sort-name";
-		var root = document.getElementById(this._divId);
 		root.appendChild(div);
 	}
 	var sort = this._sorts[this._sortIndex];
-	div.innerHTML = sort.algo.name;
+	var t = sort.algo.name;
+	if(this._paused) t += " (paused)";
+	div.innerHTML = t;
 }
 /**
  * updates display based on current array info
@@ -343,7 +359,7 @@ CSSMusicalSorts.prototype.nextSort = function() {
 
 	console.log("nextSort", this._statusObj.arr);
 
-	this.updateTitle();
+	this.updateTitleArea();
 	this.updateVisuals();
 
 	this.step();
@@ -361,6 +377,11 @@ CSSMusicalSorts.prototype.stopOscillator = function() {
 	}
 }
 CSSMusicalSorts.prototype.step = function() {
+	if(this._paused) {
+		this.updateTitleArea();
+		return;
+	}
+
 	var algo = this._sorts[this._sortIndex].algo.f;
 	// console.log("i " + this._statusObj.i);
 	if(algo(this) !== null) {
