@@ -12,6 +12,16 @@ html, body {
 	background: black;
 }
 
+#cssms-sort-name {
+	position: absolute;
+	top:2%;
+	left:2%;
+	color:white;
+	font-size:12pt;
+	font-family:monospace;
+	letter-spacing:1px;
+}
+
 .cssms-value {
 	position: relative;
 	flex:auto;
