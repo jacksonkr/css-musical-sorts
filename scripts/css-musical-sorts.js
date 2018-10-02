@@ -48,7 +48,7 @@ function CSSMusicalSorts(divId) {
 }
 // CSSMusicalSorts.instance;
 CSSMusicalSorts.DEFAULT_SAMPLE_ARRAY_LENGTH = 165;
-CSSMusicalSorts.TOUCH_END_DELAY = 100; //ms
+CSSMusicalSorts.TOUCH_END_DELAY = 10; //ms
 /* only during the completed end of the loop */
 CSSMusicalSorts.COMPLETION_TOUCH_END_DELAY = 30; //ms
 /*
@@ -60,9 +60,9 @@ CSSMusicalSorts.DURATION_TIL_NEXT_SORT = 3000; //ms
 // CSSMusicalSorts.DEFAULT_STEP_DURATION = 10; // ms
 /**
  * how many steps can be taken before breaking the main thread to allow
- * visual updates to process
+ * visual updates to process. The higher the number the faster the sort goes.
  */
-CSSMusicalSorts.STEP_COUNT_BREAK = 10;
+CSSMusicalSorts.STEP_COUNT_BREAK = 7;
 CSSMusicalSorts.TONE_FREQUENCY_MIN = 80; // hz
 CSSMusicalSorts.TONE_FREQUENCY_MAX = 1300; //hz
 CSSMusicalSorts.TONE_TYPE = "triangle";
@@ -216,7 +216,7 @@ CSSMusicalSorts.prototype.updateTitle = function() {
 		root.appendChild(div);
 	}
 	var sort = this._sorts[this._sortIndex];
-	div.innerHTML = sort.name;
+	div.innerHTML = sort.algo.name;
 }
 /**
  * updates display based on current array info
