@@ -21,6 +21,7 @@ function CSSMusicalSorts(divId) {
 		// main construct @jkr
 		this._divId = divId;
 		this._stepCount = 0;
+		this._stepCountBreak = CSSMusicalSorts.DEFAULT_STEP_COUNT_BREAK;
 		this._step_duration = 0;//CSSMusicalSorts.DEFAULT_STEP_DURATION;
 		this._sortIndex = -1;
 		this._sorts = [];
@@ -62,7 +63,7 @@ CSSMusicalSorts.DURATION_TIL_NEXT_SORT = 3000; //ms
  * how many steps can be taken before breaking the main thread to allow
  * visual updates to process. The higher the number the faster the sort goes.
  */
-CSSMusicalSorts.STEP_COUNT_BREAK = 7;
+CSSMusicalSorts.DEFAULT_STEP_COUNT_BREAK = 7;
 CSSMusicalSorts.TONE_FREQUENCY_MIN = 80; // hz
 CSSMusicalSorts.TONE_FREQUENCY_MAX = 1300; //hz
 CSSMusicalSorts.TONE_TYPE = "triangle";
@@ -151,11 +152,13 @@ CSSMusicalSorts.ALGO_INSERTION_SORT = {
 			statusObj.j = statusObj.i;
 		}
 
+		instance.toneCallback(statusObj.arr[statusObj.i-1]);
+
 		if(statusObj.i < statusObj.arr.length) { // for
 			if(statusObj.j > 0
 			&& statusObj.arr[statusObj.j-1] > statusObj.temp) {
 				instance.valueSwapped(statusObj.j, statusObj.j-1);
-				instance.toneCallback(statusObj.j);
+				instance.toneCallback(statusObj.arr[statusObj.j]);
 				instance.indexTouched(statusObj.j);
 				statusObj.arr[statusObj.j] = statusObj.arr[statusObj.j-1];
 				--statusObj.j;
@@ -267,7 +270,7 @@ CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
  //    toEle.parentNode.replaceChild(toEle, toCopy);
 }
 CSSMusicalSorts.prototype.defaultSorts = function() {
-	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 0.5);
+	// this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 0.5);
 	this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 300, 0.5);
 	// this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 500, 1);
 	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 400, 1.2);
@@ -365,7 +368,7 @@ CSSMusicalSorts.prototype.step = function() {
 CSSMusicalSorts.prototype.stepContinue = function() {
 	var self = this;
 
-	if(++this._stepCount < CSSMusicalSorts.STEP_COUNT_BREAK) {
+	if(++this._stepCount < this._stepCountBreak) {
 		
 		return this.step();
 	}
