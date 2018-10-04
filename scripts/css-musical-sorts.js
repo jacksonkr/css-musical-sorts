@@ -140,8 +140,8 @@ CSSMusicalSorts.ALGO_SELECTION_SORT = {
 					minIdx = statusObj.j;
 				}
 			}
-			temp = arr[statusObj.i];
 			instance.valueSwapped(statusObj.i, minIdx);
+			temp = arr[statusObj.i];
 			arr[statusObj.i] = arr[minIdx];
 			arr[minIdx] = temp;
 
@@ -193,18 +193,69 @@ CSSMusicalSorts.ALGO_QUICK_SORT = {  //unfinished
 	name:"Quick Sort",
 	f: function(instance) {
 		var statusObj = instance.getStatusObj();
-		if(statusObj.pivot === undefined) {
-			statusObj.pivot = statusObj.arr[length-1];
-			statusObj.i = 0;
-			statusObj.j = 0;
+		if(statusObj.loopId === undefined) {
+			statusObj.loopId = -1;
+			statusObj.quickSortLoopData = [];
 		}
 
-		if(statusObj.pivot !== undefined) {
-			if(statusObj.arr[statusObj.j] < statusObj.pivot) {
+		var quickSort = function(arr, left, right){
+			statusObj.quickSortLoopData.push ({
+				loopId: statusObj.quickSortLoopData.length,
+				left:left,
+				right:right
+			});
+
+			var len = arr.length;
+			var pivot;
+			var partitionIndex;
+
+			if(left < right){
+				pivot = right;
+				partitionIndex = partition(statusObj.arr, pivot, left, right);
 				
+				//sort left and right
+				quickSort(statusObj.arr, left, partitionIndex - 1);
+				// statusObj.recursedSort.push({arr:arr.slice(), left:left, right:partitionIndex-1});
+				quickSort(statusObj.arr, partitionIndex + 1, right);
+				// statusObj.recursedSort.push({arr:arr.slice(), left:partitionIndex-1, right:right});
 			}
-			++statusObj.j;
+
+			//return arr;
 		}
+
+		var partition = function(arr, pivot, left, right){
+			var pivotValue = arr[pivot],
+					partitionIndex = left;
+
+			for(var i = left; i < right; i++){
+				if(arr[i] < pivotValue){
+					swap(arr, i, partitionIndex);
+					partitionIndex++;
+				}
+			}
+			swap(arr, right, partitionIndex);
+			return partitionIndex;
+		}
+
+		var swap = function(arr, i, j){
+			instance.toneCallback(i);
+			instance.indexTouched(i);
+			instance.valueSwapped(i, j);
+
+			var temp = arr[i];
+			arr[i] = arr[j];
+			arr[j] = temp;
+		}
+
+		// if(statusObj.recursedSortsA.length) {
+		// 	quickSort(statusObj.recursedSortsA[0]);
+		// }
+
+		// if(statusObj.recursedSortsB.length) {
+		// 	quickSort(statusObj.recursedSortsB[0]);
+		// }
+
+		quickSort(statusObj.arr, 0, statusObj.arr.length-1);
 
 		return null;
 	}
@@ -286,9 +337,9 @@ CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
  //    toEle.parentNode.replaceChild(toEle, toCopy);
 }
 CSSMusicalSorts.prototype.defaultSorts = function() {
-	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 7);
-	this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 150, 2);
-	// this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 500, 14);
+	// this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 4);
+	// this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 150, 2);
+	this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 150, 0);
 	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 400, 17);
 	// this.addSort(CSSMusicalSorts.ALGO_HEAP_SORT, 400, 14);
 	// this.addSort(CSSMusicalSorts.ALGO_RADIX_LSD_SORT, 300, 28);
@@ -318,6 +369,7 @@ CSSMusicalSorts.prototype.toneCallback = function(value) {
 	var percent = value / this._statusObj.arr.length;
 	var toneRange = (CSSMusicalSorts.TONE_FREQUENCY_MAX - CSSMusicalSorts.TONE_FREQUENCY_MIN);
 	var tone = toneRange * percent + CSSMusicalSorts.TONE_FREQUENCY_MIN;
+	if(isNaN(tone)) tone = CSSMusicalSorts.TONE_FREQUENCY_MIN; // safety @jkr
 	// console.log("Playing tone at " + tone + " hz");
 	this._osc.frequency.value = tone;
 	this.startOscillator();
