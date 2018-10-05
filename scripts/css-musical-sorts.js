@@ -80,7 +80,7 @@ CSSMusicalSorts.DEFAULT_STEP_COUNT_BREAK = 7;
 CSSMusicalSorts.TONE_FREQUENCY_MIN = 80; // hz
 CSSMusicalSorts.TONE_FREQUENCY_MAX = 1300; //hz
 CSSMusicalSorts.TONE_TYPE = "triangle";
-CSSMusicalSorts.TONE_VOLUME = 0;//.25;
+CSSMusicalSorts.TONE_VOLUME = 0.25;
 CSSMusicalSorts.ALGO_BUBBLE_SORT = {
 	name: "Bubble Sort",
 	f: function(instance) {
@@ -193,91 +193,48 @@ CSSMusicalSorts.ALGO_QUICK_SORT = {  //unfinished
 	name:"Quick Sort",
 	f: function(instance) {
 		var statusObj = instance.getStatusObj();
-		if(statusObj.loopId === undefined) {
-			statusObj.loopId = 0;
-			statusObj.loopData = [{
-				loopId: 1,
-				left: 0,
-				right: statusObj.arr.length-1,
-				section:1,
-			}];
-		}
 
-		var quickSort = function(arr, left, right){
-			var len = arr.length;
-			var pivot;
-			var partitionIndex;
+function quickSort(arr, left, right){
+   var len = arr.length, 
+   pivot,
+   partitionIndex;
 
-			if(left < right){
-				pivot = right;
-				partitionIndex = partition(arr, pivot, left, right);
-				
-				//sort left and right
-				// quickSort(statusObj.arr, left, partitionIndex - 1);
-				if(statusObj.section == 1) {
-					statusObj.loopData.push({
-						loopId: statusObj.loopData.length,
-						left:left,
-						right:partitionIndex-1,
-						section: 1,
-					});
 
-					// if(statusObj.loopData.length > 1)
-					return instance.stepComplete();
-				}
-				
-				// quickSort(statusObj.arr, partitionIndex + 1, right);
-				if(statusObj.section == 2) {
-					statusObj.loopData.push({
-						loopId: statusObj.loopData.length,
-						left:partitionIndex-1,
-						right:right,
-						section: 2,
-					});
-					return instance.stepComplete();
-				}
-			}
+  if(left < right){
+    pivot = right;
+    partitionIndex = partition(arr, pivot, left, right);
+    
+   //sort left and right
+   quickSort(arr, left, partitionIndex - 1);
+   quickSort(arr, partitionIndex + 1, right);
+  }
+  return arr;
+}
 
-			// if(++statusObj.section >= 3) return null;
-			while(statusObj.loopData.length > 2)
-				statusObj.loopData.pop();
+function partition(arr, pivot, left, right){
+   var pivotValue = arr[pivot],
+       partitionIndex = left;
 
-			//return arr;
-			return instance.stepComplete();
-		}
+   for(var i = left; i < right; i++){
+    if(arr[i] < pivotValue){
+      swap(arr, i, partitionIndex);
+      partitionIndex++;
+    }
+  }
+  swap(arr, right, partitionIndex);
+  return partitionIndex;
+}
 
-		var partition = function(arr, pivot, left, right){
-			var pivotValue = arr[pivot];
-			var partitionIndex = left;
+function swap(arr, i, j){
+	statusObj.record.push({type:"swap", params:[i, j]});
+   var temp = arr[i];
+   arr[i] = arr[j];
+   arr[j] = temp;
+}
 
-			for(var i = left; i < right; i++){
-				if(arr[i] < pivotValue){
-					swap(arr, i, partitionIndex);
-					partitionIndex++;
-				}
-			}
-			swap(arr, right, partitionIndex);
-			return partitionIndex;
-		}
-
-		var swap = function(arr, i, j){
-			instance.toneCallback(i);
-			instance.indexTouched(i);
-			instance.valueSwapped(i, j);
-
-			var temp = arr[i];
-			arr[i] = arr[j];
-			arr[j] = temp;
-		}
-
-		if(statusObj.section >= 3) return null;
-
-		// quickSort(statusObj.arr, 0, statusObj.arr.length-1);
-		var data = statusObj.loopData[statusObj.loopData.length-1];
-		quickSort(statusObj.arr, data.left, data.right);
-
-		// if(!statusObj.loopData.length)
-		// 	return null;
+		quickSort(statusObj.arr, 0, statusObj.arr.length-1);
+		
+		return null;
 	}
 };
 CSSMusicalSorts.ALGO_MERGE_SORT = {
@@ -357,9 +314,9 @@ CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
  //    toEle.parentNode.replaceChild(toEle, toCopy);
 }
 CSSMusicalSorts.prototype.defaultSorts = function() {
-	// this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 4);
-	// this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 150, 2);
-	this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 150, 0);
+	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 4);
+	this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 150, 2);
+	this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 150, 10);
 	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 400, 17);
 	// this.addSort(CSSMusicalSorts.ALGO_HEAP_SORT, 400, 14);
 	// this.addSort(CSSMusicalSorts.ALGO_RADIX_LSD_SORT, 300, 28);
@@ -427,6 +384,7 @@ CSSMusicalSorts.prototype.nextSort = function() {
 	var sort = this._sorts[this._sortIndex];
 	var len = sort.len;
 	this._stepCountBreak = sort.breakCount;
+	this._statusObj.record = [];
 	this._statusObj.arr = this.generateSampleData(len);
 
 	console.log("nextSort", this._statusObj.arr);
@@ -461,7 +419,31 @@ CSSMusicalSorts.prototype.step = function() {
 		return;
 	}
 	
-	this.loopComplete();
+	this.playbackRecording();
+}
+CSSMusicalSorts.prototype.playbackRecording = function() {
+	if(this._statusObj.playbackIndex === undefined) {
+		this._statusObj.playbackIndex = -1;
+	}
+
+	if(++this._statusObj.playbackIndex >= this._statusObj.record.length) {
+		return this.loopComplete();
+	}
+
+	var o = this._statusObj.record[this._statusObj.playbackIndex];
+
+	switch(o.type) {
+		case "swap":
+			this.valueSwapped.apply(this, o.params);
+			this.toneCallback.apply(this, o.params);
+			this.indexTouched.apply(this, o.params);
+			break;
+	}
+
+	var self = this;
+	this.runFuncWithDelay(function() {
+		self.playbackRecording();
+	}, this._stepCountBreak);
 }
 CSSMusicalSorts.prototype.stepContinue = function() {
 	var self = this;
