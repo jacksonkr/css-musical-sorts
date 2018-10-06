@@ -80,7 +80,7 @@ CSSMusicalSorts.DEFAULT_STEP_COUNT_BREAK = 7;
 CSSMusicalSorts.TONE_FREQUENCY_MIN = 80; // hz
 CSSMusicalSorts.TONE_FREQUENCY_MAX = 1300; //hz
 CSSMusicalSorts.TONE_TYPE = "triangle";
-CSSMusicalSorts.TONE_VOLUME = 0.1;
+CSSMusicalSorts.TONE_VOLUME = 0.25;
 CSSMusicalSorts.ALGO_BUBBLE_SORT = {
 	name: "Bubble Sort",
 	f: function(instance) {
