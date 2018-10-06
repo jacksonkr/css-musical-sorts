@@ -140,8 +140,8 @@ CSSMusicalSorts.ALGO_SELECTION_SORT = {
 					minIdx = statusObj.j;
 				}
 			}
-			temp = arr[statusObj.i];
 			instance.valueSwapped(statusObj.i, minIdx);
+			temp = arr[statusObj.i];
 			arr[statusObj.i] = arr[minIdx];
 			arr[minIdx] = temp;
 
@@ -193,28 +193,160 @@ CSSMusicalSorts.ALGO_QUICK_SORT = {  //unfinished
 	name:"Quick Sort",
 	f: function(instance) {
 		var statusObj = instance.getStatusObj();
-		if(statusObj.pivot === undefined) {
-			statusObj.pivot = statusObj.arr[length-1];
-			statusObj.i = 0;
-			statusObj.j = 0;
+
+		function quickSort(arr, left, right){
+		   var len = arr.length, 
+		   pivot,
+		   partitionIndex;
+
+
+		  if(left < right){
+		    pivot = right;
+		    partitionIndex = partition(arr, pivot, left, right);
+		    
+		   //sort left and right
+		   quickSort(arr, left, partitionIndex - 1);
+		   quickSort(arr, partitionIndex + 1, right);
+		  }
+		  return arr;
 		}
 
-		if(statusObj.pivot !== undefined) {
-			if(statusObj.arr[statusObj.j] < statusObj.pivot) {
-				
-			}
-			++statusObj.j;
+		function partition(arr, pivot, left, right){
+		   var pivotValue = arr[pivot],
+		       partitionIndex = left;
+
+		   for(var i = left; i < right; i++){
+		    if(arr[i] < pivotValue){
+		      swap(arr, i, partitionIndex);
+		      partitionIndex++;
+		    }
+		  }
+		  swap(arr, right, partitionIndex);
+		  return partitionIndex;
 		}
 
+		function swap(arr, i, j){
+			statusObj.record.push({type:"swap", params:[i,j]});
+		   var temp = arr[i];
+		   arr[i] = arr[j];
+		   arr[j] = temp;
+		}
+
+		quickSort(statusObj.arr, 0, statusObj.arr.length-1);
+		
 		return null;
 	}
 };
+CSSMusicalSorts.ALGO_RADIX_LSD_SORT = {
+	name: "Radix LSD Sort",
+	f: function(instance) {
+		var statusObj = instance.getStatusObj();
+
+		return null;
+	}
+}
 CSSMusicalSorts.ALGO_MERGE_SORT = {
 	name: "Merge Sort",
 	f: function(instance) {
+		var statusObj = instance.getStatusObj();
+
+		function mergeSort(arr){
+		   var len = arr.length;
+		   if(len <2)
+		      return arr;
+		   var mid = Math.floor(len/2),
+		       left = arr.slice(0,mid),
+		       right =arr.slice(mid);
+		   //send left and right to the mergeSort to broke it down into pieces
+		   //then merge those
+		   return merge(mergeSort(left),mergeSort(right));
+		}
+
+		function merge(left, right){
+		  var result = [],
+		      lLen = left.length,
+		      rLen = right.length,
+		      l = 0,
+		      r = 0;
+		  while(l < lLen && r < rLen){
+		     if(left[l] < right[r]){
+		       result.push(left[l++]);
+		     }
+		     else{
+		       result.push(right[r++]);
+		    }
+		  }
+		  //remaining part needs to be addred to the result
+		  return result.concat(left.slice(l)).concat(right.slice(r));
+		}
+
+		mergeSort(statusObj.arr);
+
 		return null;
 	}
 };
+
+CSSMusicalSorts.ALGO_COCKTAIL_SHAKER_SORT = {
+	name: "Cocktail Sort",
+	f: function(instance) {
+		var statusObj = instance.getStatusObj();
+		var a = statusObj.arr;
+
+	    var swapped = true; 
+	    var start = 0; 
+	    var end = a.length; 
+
+	    while (swapped == true) { 
+	        // reset the swapped flag on entering the 
+	        // loop, because it might be true from a 
+	        // previous iteration. 
+	        swapped = false; 
+
+	        // loop from bottom to top same as 
+	        // the bubble sort 
+	        for (var i = start; i < end - 1; ++i) { 
+	            if (a[i] > a[i + 1]) { 
+	                var temp = a[i]; 
+	                a[i] = a[i + 1]; 
+	                a[i + 1] = temp; 
+	                swapped = true;
+	                statusObj.record.push({type:"swap", params:[i,i+1]});
+	            } 
+	        } 
+
+	        // if nothing moved, then array is sorted. 
+	        if (swapped == false) 
+	            break; 
+
+	        // otherwise, reset the swapped flag so that it 
+	        // can be used in the next stage 
+	        swapped = false; 
+
+	        // move the end point back by one, because 
+	        // item at the end is in its rightful spot 
+	        end = end - 1; 
+
+	        // from top to bottom, doing the 
+	        // same comparison as in the previous stage 
+	        for (var i = end - 1; i >= start; i--) { 
+	            if (a[i] > a[i + 1]) { 
+	                var temp = a[i]; 
+	                a[i] = a[i + 1]; 
+	                a[i + 1] = temp; 
+	                swapped = true; 
+	                statusObj.record.push({type:"swap", params:[i,i+1]});
+	            } 
+	        } 
+
+	        // increase the starting point, because 
+	        // the last stage would have moved the next 
+	        // smallest number to its rightful spot. 
+	        start = start + 1; 
+	    }
+
+	    return null;
+	}
+}
 
 /**
  * this function is called for every time a sort algo completes a loop
@@ -286,16 +418,16 @@ CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
  //    toEle.parentNode.replaceChild(toEle, toCopy);
 }
 CSSMusicalSorts.prototype.defaultSorts = function() {
-	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 7);
+	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 4);
 	this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 150, 2);
-	// this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 500, 14);
-	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 400, 17);
+	this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 150, 0);
+	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 150, 2);
 	// this.addSort(CSSMusicalSorts.ALGO_HEAP_SORT, 400, 14);
-	// this.addSort(CSSMusicalSorts.ALGO_RADIX_LSD_SORT, 300, 28);
+	// this.addSort(CSSMusicalSorts.ALGO_RADIX_LSD_SORT, 150, 10);
 	// this.addSort(CSSMusicalSorts.ALGO_RADIX_MSD_SORT, 300, 28);
 	// this.addSort(CSSMusicalSorts.ALGO_SHELL_SORT, 300, 14);
-	// this.addSort(CSSMusicalSorts.ALGO_BUBBLE_SORT, 150, 8);
-	// this.addSort(CSSMusicalSorts.ALGO_COCKTAIL_SHAKER_SORT, 165, 10);
+	this.addSort(CSSMusicalSorts.ALGO_BUBBLE_SORT, 150, 4);
+	this.addSort(CSSMusicalSorts.ALGO_COCKTAIL_SHAKER_SORT, 150, 2);
 	// this.addSort(CSSMusicalSorts.ALGO_GNOME_SORT, 150, 10);
 	// this.addSort(CSSMusicalSorts.ALGO_BITONIC_SORT, 300, 7);
 	// this.addSort(CSSMusicalSorts.ALGO_BOGO_SORT, 150, 14);
@@ -318,6 +450,7 @@ CSSMusicalSorts.prototype.toneCallback = function(value) {
 	var percent = value / this._statusObj.arr.length;
 	var toneRange = (CSSMusicalSorts.TONE_FREQUENCY_MAX - CSSMusicalSorts.TONE_FREQUENCY_MIN);
 	var tone = toneRange * percent + CSSMusicalSorts.TONE_FREQUENCY_MIN;
+	if(isNaN(tone)) tone = CSSMusicalSorts.TONE_FREQUENCY_MIN; // safety @jkr
 	// console.log("Playing tone at " + tone + " hz");
 	this._osc.frequency.value = tone;
 	this.startOscillator();
@@ -355,6 +488,7 @@ CSSMusicalSorts.prototype.nextSort = function() {
 	var sort = this._sorts[this._sortIndex];
 	var len = sort.len;
 	this._stepCountBreak = sort.breakCount;
+	this._statusObj.record = [];
 	this._statusObj.arr = this.generateSampleData(len);
 
 	console.log("nextSort", this._statusObj.arr);
@@ -389,21 +523,49 @@ CSSMusicalSorts.prototype.step = function() {
 		return;
 	}
 	
-	this.loopComplete();
+	this.playbackRecording();
 }
-CSSMusicalSorts.prototype.stepContinue = function() {
-	var self = this;
+CSSMusicalSorts.prototype.playbackRecording = function() {
+	if(this._statusObj.playbackIndex === undefined) {
+		this._statusObj.playbackIndex = -1;
+	}
 
+	if(++this._statusObj.playbackIndex >= this._statusObj.record.length) {
+		return this.loopComplete();
+	}
+
+	var o = this._statusObj.record[this._statusObj.playbackIndex];
+
+	switch(o.type) {
+		case "swap":
+			this.valueSwapped.apply(this, o.params);
+			this.toneCallback.apply(this, o.params);
+			this.indexTouched.apply(this, o.params);
+			break;
+	}
+
+	var self = this;
+	this.breakCheck(function() {
+		self.playbackRecording();
+	});
+}
+CSSMusicalSorts.prototype.breakCheck = function(f) {
 	if(++this._stepCount < this._stepCountBreak) {
 		
-		return this.step();
+		return f();
 	}
 
 	this._stepCount = 0;
 	setTimeout(function() {
 		// self.stopOscillator();
-		self.step();
+		f();
 	}, this._step_duration);
+}
+CSSMusicalSorts.prototype.stepContinue = function() {
+	var self = this;
+	this.breakCheck(function() {
+		self.step();
+	});
 }
 CSSMusicalSorts.prototype.getStatusObj = function() {
 	return this._statusObj;
