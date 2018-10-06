@@ -420,7 +420,7 @@ CSSMusicalSorts.prototype.valueSwapped = function(fromId, toId) {
 CSSMusicalSorts.prototype.defaultSorts = function() {
 	this.addSort(CSSMusicalSorts.ALGO_SELECTION_SORT, 150, 4);
 	this.addSort(CSSMusicalSorts.ALGO_INSERTION_SORT, 150, 2);
-	this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 150, 10);
+	this.addSort(CSSMusicalSorts.ALGO_QUICK_SORT, 150, 0);
 	// this.addSort(CSSMusicalSorts.ALGO_MERGE_SORT, 150, 2);
 	// this.addSort(CSSMusicalSorts.ALGO_HEAP_SORT, 400, 14);
 	// this.addSort(CSSMusicalSorts.ALGO_RADIX_LSD_SORT, 150, 10);
@@ -544,14 +544,9 @@ CSSMusicalSorts.prototype.playbackRecording = function() {
 			break;
 	}
 
-	// var self = this;
-	// this.runFuncWithDelay(function() {
-	// 	self.playbackRecording();
-	// }, this._stepCountBreak);
-
 	var self = this;
 	this.breakCheck(function() {
-		self.step();
+		self.playbackRecording();
 	});
 }
 CSSMusicalSorts.prototype.breakCheck = function(f) {
